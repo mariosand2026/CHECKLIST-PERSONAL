@@ -10,14 +10,13 @@
   box-sizing: border-box;
 }
 
+/* BASE */
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
-  background: #000;
-  color: #fff;
 }
 
-/* PANTALLA INICIAL */
+/* SPLASH LOG */
 #splash {
   position: fixed;
   inset: 0;
@@ -27,10 +26,11 @@ body {
   justify-content: center;
   align-items: center;
   cursor: pointer;
+  color: #fff;
 }
 
 #splash h1 {
-  font-size: 32px;
+  font-size: 36px;
   margin: 0;
 }
 
@@ -43,9 +43,10 @@ body {
 /* APP */
 #app {
   display: none;
-  background: #0b1c2d;
   min-height: 100vh;
+  background: linear-gradient(180deg, #e9f2f9, #dbe9f4);
   padding: 20px;
+  color: #1a2a3a;
 }
 
 .container {
@@ -55,7 +56,7 @@ body {
 
 h2 {
   text-align: center;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
 }
 
 .stats {
@@ -65,50 +66,66 @@ h2 {
   margin-bottom: 15px;
 }
 
-input, button {
+/* INPUTS */
+input {
   width: 100%;
-  padding: 12px;
-  border-radius: 8px;
-  border: none;
-  font-size: 15px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 2px solid #c6d9ea;
+  font-size: 16px;
+  outline: none;
 }
 
 button {
-  background: #1abc9c;
-  color: #000;
-  margin-top: 8px;
+  width: 100%;
+  margin-top: 10px;
+  padding: 14px;
+  border-radius: 14px;
+  border: none;
+  background: #4fd1c5;
+  color: #083a3a;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
 }
 
+/* LISTA */
 ul {
   list-style: none;
   padding: 0;
-  margin-top: 15px;
+  margin-top: 20px;
 }
 
 li {
   display: flex;
   align-items: center;
-  padding: 10px;
-  background: rgba(255,255,255,0.08);
-  border-radius: 8px;
-  margin-bottom: 8px;
+  padding: 14px;
+  background: #ffffff;
+  border-radius: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+li.done {
+  background: #eef4f8;
 }
 
 li.done span {
   text-decoration: line-through;
-  opacity: 0.5;
+  opacity: 0.6;
 }
 
 input[type="checkbox"] {
-  margin-right: 10px;
   transform: scale(1.3);
+  margin-right: 12px;
 }
 
+/* FOOTER */
 footer {
   text-align: center;
-  margin-top: 30px;
+  margin-top: 35px;
   font-size: 12px;
-  opacity: 0.5;
+  opacity: 0.6;
 }
 </style>
 </head>
@@ -162,10 +179,13 @@ function render() {
   const stats = document.getElementById("stats");
   ul.innerHTML = "";
 
-  const done = items.filter(i => i.done).length;
-  stats.textContent = `Listos: ${done} · Pendientes: ${items.length - done}`;
+  const pendientes = items.filter(i => !i.done);
+  const listos = items.filter(i => i.done);
+  const ordenados = [...pendientes, ...listos];
 
-  items.forEach((item, i) => {
+  stats.textContent = `Listos: ${listos.length} · Pendientes: ${pendientes.length}`;
+
+  ordenados.forEach(item => {
     const li = document.createElement("li");
     if (item.done) li.classList.add("done");
 
