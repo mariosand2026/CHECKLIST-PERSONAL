@@ -3,14 +3,48 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Checklist Personal</title>
+<title>LOG · Checklist</title>
 
 <style>
+* {
+  box-sizing: border-box;
+}
+
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
-  background: #0b1c2d;
-  color: #fff;
   margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
+  background: #000;
+  color: #fff;
+}
+
+/* PANTALLA INICIAL */
+#splash {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+#splash h1 {
+  font-size: 32px;
+  margin: 0;
+}
+
+#splash p {
+  margin-top: 8px;
+  font-size: 14px;
+  opacity: 0.6;
+}
+
+/* APP */
+#app {
+  display: none;
+  background: #0b1c2d;
+  min-height: 100vh;
   padding: 20px;
 }
 
@@ -19,15 +53,21 @@ body {
   margin: auto;
 }
 
-h1 {
+h2 {
   text-align: center;
   margin-bottom: 10px;
 }
 
-select, input, button {
+.stats {
+  text-align: center;
+  font-size: 13px;
+  opacity: 0.7;
+  margin-bottom: 15px;
+}
+
+input, button {
   width: 100%;
   padding: 12px;
-  margin-top: 8px;
   border-radius: 8px;
   border: none;
   font-size: 15px;
@@ -36,19 +76,7 @@ select, input, button {
 button {
   background: #1abc9c;
   color: #000;
-  cursor: pointer;
-}
-
-.filters {
-  display: flex;
-  gap: 5px;
-  margin-top: 10px;
-}
-
-.filters button {
-  flex: 1;
-  background: #34495e;
-  color: #fff;
+  margin-top: 8px;
 }
 
 ul {
@@ -66,9 +94,9 @@ li {
   margin-bottom: 8px;
 }
 
-li.checked span {
+li.done span {
   text-decoration: line-through;
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
 input[type="checkbox"] {
@@ -80,82 +108,66 @@ footer {
   text-align: center;
   margin-top: 30px;
   font-size: 12px;
-  opacity: 0.6;
+  opacity: 0.5;
 }
 </style>
 </head>
 
 <body>
 
-<div class="container">
-
-<h1>🧳 Checklist personal</h1>
-
-<select id="listSelector" onchange="changeList()"></select>
-
-<input id="newList" placeholder="Nueva lista (ej: Paseo playa)">
-<button onclick="addList()">Crear lista</button>
-
-<input id="itemInput" placeholder="Agregar artículo">
-<button onclick="addItem()">Agregar</button>
-
-<div class="filters">
-  <button onclick="filterItems('all')">Todos</button>
-  <button onclick="filterItems('pending')">Pendientes</button>
-  <button onclick="filterItems('done')">Completados</button>
+<!-- SPLASH -->
+<div id="splash" onclick="enterApp()">
+  <h1>LOG</h1>
+  <p>Artificial Intelligence</p>
 </div>
 
-<ul id="items"></ul>
+<!-- APP -->
+<div id="app">
+  <div class="container">
 
-<button onclick="clearCompleted()">Limpiar completados</button>
+    <h2>🧳 Mi checklist</h2>
+    <div class="stats" id="stats"></div>
 
-<footer>
-  LOG · Artificial Intelligence<br>
-  by Mario Andrés Narváez Delgado
-</footer>
+    <input id="itemInput" placeholder="Agregar a la lista">
+    <button onclick="addItem()">Agregar</button>
 
+    <ul id="list"></ul>
+
+    <footer>
+      LOG · Artificial Intelligence<br>
+      by Mario Andrés Narváez Delgado
+    </footer>
+
+  </div>
 </div>
 
 <script>
-let data = JSON.parse(localStorage.getItem("checklists")) || {
-  "Paseo": [
-    { text: "medias", done: false },
-    { text: "boxer", done: false },
-    { text: "comprar desodorantes", done: false }
-  ]
-};
+let items = JSON.parse(localStorage.getItem("logChecklist")) || [
+  { text: "medias", done: false },
+  { text: "boxer", done: false },
+  { text: "comprar desodorantes", done: false }
+];
 
-let currentList = Object.keys(data)[0];
-let filter = "all";
-
-const selector = document.getElementById("listSelector");
-const ul = document.getElementById("items");
+function enterApp() {
+  document.getElementById("splash").style.display = "none";
+  document.getElementById("app").style.display = "block";
+}
 
 function save() {
-  localStorage.setItem("checklists", JSON.stringify(data));
+  localStorage.setItem("logChecklist", JSON.stringify(items));
 }
 
-function renderLists() {
-  selector.innerHTML = "";
-  Object.keys(data).forEach(name => {
-    const option = document.createElement("option");
-    option.value = name;
-    option.textContent = name;
-    if (name === currentList) option.selected = true;
-    selector.appendChild(option);
-  });
-}
-
-function renderItems() {
+function render() {
+  const ul = document.getElementById("list");
+  const stats = document.getElementById("stats");
   ul.innerHTML = "";
-  data[currentList].forEach((item, i) => {
-    if (
-      filter === "pending" && item.done ||
-      filter === "done" && !item.done
-    ) return;
 
+  const done = items.filter(i => i.done).length;
+  stats.textContent = `Listos: ${done} · Pendientes: ${items.length - done}`;
+
+  items.forEach((item, i) => {
     const li = document.createElement("li");
-    if (item.done) li.classList.add("checked");
+    if (item.done) li.classList.add("done");
 
     const cb = document.createElement("input");
     cb.type = "checkbox";
@@ -163,7 +175,7 @@ function renderItems() {
     cb.onchange = () => {
       item.done = !item.done;
       save();
-      renderItems();
+      render();
     };
 
     const span = document.createElement("span");
@@ -178,41 +190,13 @@ function renderItems() {
 function addItem() {
   const input = document.getElementById("itemInput");
   if (!input.value.trim()) return;
-  data[currentList].push({ text: input.value, done: false });
+  items.push({ text: input.value, done: false });
   input.value = "";
   save();
-  renderItems();
+  render();
 }
 
-function addList() {
-  const input = document.getElementById("newList");
-  if (!input.value.trim() || data[input.value]) return;
-  data[input.value] = [];
-  currentList = input.value;
-  input.value = "";
-  save();
-  renderLists();
-  renderItems();
-}
-
-function changeList() {
-  currentList = selector.value;
-  renderItems();
-}
-
-function filterItems(type) {
-  filter = type;
-  renderItems();
-}
-
-function clearCompleted() {
-  data[currentList] = data[currentList].filter(i => !i.done);
-  save();
-  renderItems();
-}
-
-renderLists();
-renderItems();
+render();
 </script>
 
 </body>
