@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checklist Personal</title>
+
+<style>
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
+  background: #0b1c2d;
+  color: #fff;
+  margin: 0;
+  padding: 20px;
+}
+
+.container {
+  max-width: 420px;
+  margin: auto;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+select, input, button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+  border-radius: 8px;
+  border: none;
+  font-size: 15px;
+}
+
+button {
+  background: #1abc9c;
+  color: #000;
+  cursor: pointer;
+}
+
+.filters {
+  display: flex;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.filters button {
+  flex: 1;
+  background: #34495e;
+  color: #fff;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+  margin-top: 15px;
+}
+
+li {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+li.checked span {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+input[type="checkbox"] {
+  margin-right: 10px;
+  transform: scale(1.3);
+}
+
+footer {
+  text-align: center;
+  margin-top: 30px;
+  font-size: 12px;
+  opacity: 0.6;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🧳 Checklist personal</h1>
+
+<select id="listSelector" onchange="changeList()"></select>
+
+<input id="newList" placeholder="Nueva lista (ej: Paseo playa)">
+<button onclick="addList()">Crear lista</button>
+
+<input id="itemInput" placeholder="Agregar artículo">
+<button onclick="addItem()">Agregar</button>
+
+<div class="filters">
+  <button onclick="filterItems('all')">Todos</button>
+  <button onclick="filterItems('pending')">Pendientes</button>
+  <button onclick="filterItems('done')">Completados</button>
+</div>
+
+<ul id="items"></ul>
+
+<button onclick="clearCompleted()">Limpiar completados</button>
+
+<footer>
+  LOG · Artificial Intelligence<br>
+  by Mario Andrés Narváez Delgado
+</footer>
+
+</div>
+
+<script>
+let data = JSON.parse(localStorage.getItem("checklists")) || {
+  "Paseo": [
+    { text: "medias", done: false },
+    { text: "boxer", done: false },
+    { text: "comprar desodorantes", done: false }
+  ]
+};
+
+let currentList = Object.keys(data)[0];
+let filter = "all";
+
+const selector = document.getElementById("listSelector");
+const ul = document.getElementById("items");
+
+function save() {
+  localStorage.setItem("checklists", JSON.stringify(data));
+}
+
+function renderLists() {
+  selector.innerHTML = "";
+  Object.keys(data).forEach(name => {
+    const option = document.createElement("option");
+    option.value = name;
+    option.textContent = name;
+    if (name === currentList) option.selected = true;
+    selector.appendChild(option);
+  });
+}
+
+function renderItems() {
+  ul.innerHTML = "";
+  data[currentList].forEach((item, i) => {
+    if (
+      filter === "pending" && item.done ||
+      filter === "done" && !item.done
+    ) return;
+
+    const li = document.createElement("li");
+    if (item.done) li.classList.add("checked");
+
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = item.done;
+    cb.onchange = () => {
+      item.done = !item.done;
+      save();
+      renderItems();
+    };
+
+    const span = document.createElement("span");
+    span.textContent = item.text;
+
+    li.appendChild(cb);
+    li.appendChild(span);
+    ul.appendChild(li);
+  });
+}
+
+function addItem() {
+  const input = document.getElementById("itemInput");
+  if (!input.value.trim()) return;
+  data[currentList].push({ text: input.value, done: false });
+  input.value = "";
+  save();
+  renderItems();
+}
+
+function addList() {
+  const input = document.getElementById("newList");
+  if (!input.value.trim() || data[input.value]) return;
+  data[input.value] = [];
+  currentList = input.value;
+  input.value = "";
+  save();
+  renderLists();
+  renderItems();
+}
+
+function changeList() {
+  currentList = selector.value;
+  renderItems();
+}
+
+function filterItems(type) {
+  filter = type;
+  renderItems();
+}
+
+function clearCompleted() {
+  data[currentList] = data[currentList].filter(i => !i.done);
+  save();
+  renderItems();
+}
+
+renderLists();
+renderItems();
+</script>
+
+</body>
+</html>
